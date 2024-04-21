@@ -11,19 +11,41 @@ import (
 )
 
 type RedisServer struct {
-	listenAddr string
-	ln         net.Listener
-	quitch     chan struct{}
-	msgch      chan []byte
+	listenAddr  string
+	ln          net.Listener
+	quitch      chan struct{}
+	msgch       chan []byte
+	replicaHost string
+	replicaPort string
+	clusterType string
 }
 
 var Set map[string]string
 
-func NewSever(listenAddr string) *RedisServer {
+func NewSever() *RedisServer {
+	port := flag.String("port", "6379", "redis port")
+	replicaHost := flag.String("replicaof", "", "redis master cluster")
+	replicaPort := "0"
+
+	flag.Parse()
+	args := flag.Args()
+
+	clusterType := "master"
+
+	if len(*replicaHost) > 0 {
+		clusterType = "slave"
+	}
+	if len(args) > 0 {
+		replicaPort = args[0]
+	}
+
 	return &RedisServer{
-		listenAddr: listenAddr,
-		quitch:     make(chan struct{}),
-		msgch:      make(chan []byte),
+		clusterType: clusterType,
+		listenAddr:  ":" + *port,
+		quitch:      make(chan struct{}),
+		msgch:       make(chan []byte),
+		replicaHost: *replicaHost,
+		replicaPort: replicaPort,
 	}
 }
 
@@ -126,7 +148,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 		if len(splitMsg) >= 4 {
 			infoParam := splitMsg[4]
 			if infoParam == "replication" {
-				return "+role:master"
+				return "+role:" + rs.clusterType
 			}
 		}
 	}
@@ -136,10 +158,6 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 }
 
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	port := flag.String("port", "6379", "redis port")
-	flag.Parse()
-
-	redisSever := NewSever(":" + *port)
+	redisSever := NewSever()
 	log.Fatal(redisSever.Start())
 }
