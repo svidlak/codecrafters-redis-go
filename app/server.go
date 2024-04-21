@@ -65,7 +65,7 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 		}
 
 		msg := buf[:n]
-		response := "+" + rs.parseMessage(msg)
+		response := rs.parseMessage(msg)
 		response = response + "\r\n"
 
 		conn.Write([]byte(response))
@@ -74,20 +74,16 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 
 func (rs *RedisServer) parseMessage(message []byte) string {
 	msg := strings.ToLower(strings.TrimSpace(string(message)))
-	splitMsg := strings.SplitN(msg, " ", 2)
+	splitMsg := strings.Split(msg, "\\r\\n")
 
-	fmt.Println(msg)
+	fmt.Printf("%#v\n", splitMsg)
 
-	command := strings.TrimSpace(splitMsg[0])
+	command := splitMsg[2]
 
 	if command == "ping" {
-		if len(splitMsg) > 1 {
-			fmt.Println(splitMsg[1])
-			return splitMsg[1]
-		}
-		return "PONG"
+		return "+PONG"
 	}
-	return ""
+	return "-ERROR"
 }
 
 func main() {
