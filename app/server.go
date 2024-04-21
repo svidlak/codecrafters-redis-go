@@ -101,14 +101,14 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 
 			if len(splitMsg) >= 10 {
 				expirationTime, err := strconv.Atoi(splitMsg[10])
-				if err == nil {
-					go time.AfterFunc(time.Duration(expirationTime)*time.Millisecond, func() {
-						delete(Set, key)
-					})
+				if err != nil {
+					return "-ERROR"
 				}
+				go time.AfterFunc(time.Duration(expirationTime)*time.Millisecond, func() {
+					delete(Set, key)
+				})
 			}
 			Set[key] = val
-
 			return "+OK"
 		}
 	}
@@ -120,6 +120,14 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 				return "+" + val
 			}
 			return "$-1"
+		}
+	}
+	if command == "info" {
+		if len(splitMsg) >= 4 {
+			infoParam := splitMsg[4]
+			if infoParam == "replication" {
+				return "*1\r\n$11\r\ninfo:master"
+			}
 		}
 	}
 
