@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -128,6 +129,9 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	redisSever := NewSever(":6379")
+	port := flag.String("port", "6379", "redis port")
+	flag.Parse()
+
+	redisSever := NewSever(":" + *port)
 	log.Fatal(redisSever.Start())
 }
