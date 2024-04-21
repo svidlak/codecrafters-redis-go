@@ -153,14 +153,13 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 			infoParam := splitMsg[4]
 			if infoParam == "replication" {
 				role := "role:" + rs.clusterType
-				response := fmt.Sprintf("$%d\r\n%s\r\n", len(role), role)
-
 				masterId := "master_replid:" + rs.ID
-				response += fmt.Sprintf("$%d\r\n%s\r\n", len(masterId), masterId)
-
 				masterReplOffset := "master_repl_offset:" + strconv.Itoa(rs.offset)
+
+				response := fmt.Sprintf("*%d\r\n", 3)
+				response += fmt.Sprintf("$%d\r\n%s\r\n", len(role), role)
+				response += fmt.Sprintf("$%d\r\n%s\r\n", len(masterId), masterId)
 				response += fmt.Sprintf("$%d\r\n%s", len(masterReplOffset), masterReplOffset)
-				fmt.Print(response)
 
 				return response
 			}
