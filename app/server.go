@@ -65,7 +65,7 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 		}
 
 		msg := buf[:n]
-		response := rs.parseMessage(msg)
+		response := "+" + rs.parseMessage(msg)
 		response = response + "\r\n"
 
 		conn.Write([]byte(response))
@@ -83,7 +83,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 			fmt.Println(splitMsg[1])
 			return splitMsg[1]
 		}
-		return "+PONG"
+		return "PONG"
 	}
 	return ""
 }
