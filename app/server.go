@@ -74,7 +74,7 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 
 func (rs *RedisServer) parseMessage(message []byte) string {
 	msg := strings.ToLower(strings.TrimSpace(string(message)))
-	splitMsg := strings.Split(msg, "\\r\\n")
+	splitMsg := strings.Split(msg, "\r\n")
 
 	fmt.Printf("%#v\n", splitMsg)
 
