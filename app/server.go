@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type RedisServer struct {
@@ -96,6 +98,14 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 			key := splitMsg[4]
 			val := splitMsg[6]
 
+			if len(splitMsg) >= 10 {
+				expirationTime, err := strconv.Atoi(splitMsg[10])
+				if err == nil {
+					go time.AfterFunc(time.Duration(expirationTime)*time.Millisecond, func() {
+						delete(Set, key)
+					})
+				}
+			}
 			Set[key] = val
 
 			return "+OK"
@@ -108,6 +118,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 			if ok {
 				return "+" + val
 			}
+			return "$-1"
 		}
 	}
 
