@@ -83,7 +83,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 			fmt.Println(splitMsg[1])
 			return splitMsg[1]
 		}
-		return "PONG"
+		return "+PONG"
 	}
 	return ""
 }
