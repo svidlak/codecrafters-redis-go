@@ -73,12 +73,12 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 }
 
 func (rs *RedisServer) parseMessage(message []byte) string {
-	msg := strings.TrimSpace(string(message))
+	msg := strings.ToLower(strings.TrimSpace(string(message)))
 	splitMsg := strings.SplitN(msg, " ", 2)
 
 	command := splitMsg[0]
 
-	if command == "PING" {
+	if command == "ping" {
 		if len(splitMsg) > 1 {
 			fmt.Println(splitMsg[1])
 			return splitMsg[1]
