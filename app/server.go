@@ -83,6 +83,12 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	if command == "ping" {
 		return "+PONG"
 	}
+	if command == "echo" {
+		if len(splitMsg) < 4 {
+			return "-ERROR"
+		}
+		return "+" + splitMsg[4]
+	}
 
 	return "-ERROR"
 
