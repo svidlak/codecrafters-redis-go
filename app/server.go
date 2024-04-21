@@ -85,6 +85,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	}
 
 	return "-ERROR"
+
 }
 
 func main() {
