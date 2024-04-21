@@ -126,7 +126,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 		if len(splitMsg) >= 4 {
 			infoParam := splitMsg[4]
 			if infoParam == "replication" {
-				return "+info:master"
+				return "+role:master"
 			}
 		}
 	}
