@@ -14,6 +14,8 @@ type RedisServer struct {
 	msgch      chan []byte
 }
 
+var Set map[string]string
+
 func NewSever(listenAddr string) *RedisServer {
 	return &RedisServer{
 		listenAddr: listenAddr,
@@ -29,6 +31,7 @@ func (rs *RedisServer) Start() error {
 	}
 
 	defer ln.Close()
+	Set = make(map[string]string)
 
 	fmt.Println("redis server starting on port", rs.listenAddr)
 	rs.ln = ln
@@ -84,10 +87,28 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 		return "+PONG"
 	}
 	if command == "echo" {
-		if len(splitMsg) < 4 {
-			return "-ERROR"
+		if len(splitMsg) >= 4 {
+			return "+" + splitMsg[4]
 		}
-		return "+" + splitMsg[4]
+	}
+	if command == "set" {
+		if len(splitMsg) >= 6 {
+			key := splitMsg[4]
+			val := splitMsg[6]
+
+			Set[key] = val
+
+			return "+OK"
+		}
+	}
+	if command == "get" {
+		if len(splitMsg) >= 4 {
+			key := splitMsg[4]
+			val, ok := Set[key]
+			if ok {
+				return "+" + val
+			}
+		}
 	}
 
 	return "-ERROR"
