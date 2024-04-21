@@ -161,6 +161,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 				response += fmt.Sprintf("$%d\r\n%s\r\n", len(masterId), masterId)
 				response += fmt.Sprintf("$%d\r\n%s", len(masterReplOffset), masterReplOffset)
 
+				fmt.Print(response)
 				return response
 			}
 		}
