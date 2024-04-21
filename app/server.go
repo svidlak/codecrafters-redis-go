@@ -18,6 +18,8 @@ type RedisServer struct {
 	replicaHost string
 	replicaPort string
 	clusterType string
+	offset      int
+	ID          string
 }
 
 var Set map[string]string
@@ -46,6 +48,8 @@ func NewSever() *RedisServer {
 		msgch:       make(chan []byte),
 		replicaHost: *replicaHost,
 		replicaPort: replicaPort,
+		ID:          "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb",
+		offset:      0,
 	}
 }
 
@@ -148,7 +152,17 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 		if len(splitMsg) >= 4 {
 			infoParam := splitMsg[4]
 			if infoParam == "replication" {
-				return "+role:" + rs.clusterType
+				role := "role:" + rs.clusterType
+				response := fmt.Sprintf("$%d\r\n%s\r\n", len(role), role)
+
+				masterId := "master_replid:" + rs.ID
+				response += fmt.Sprintf("$%d\r\n%s\r\n", len(masterId), masterId)
+
+				masterReplOffset := "master_repl_offset:" + strconv.Itoa(rs.offset)
+				response += fmt.Sprintf("$%d\r\n%s", len(masterReplOffset), masterReplOffset)
+				fmt.Print(response)
+
+				return response
 			}
 		}
 	}
