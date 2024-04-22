@@ -14,19 +14,17 @@ type RedisServer struct {
 	ln     net.Listener
 	quitch chan struct{}
 	msgch  chan []byte
-	config.Config
 }
 
 func NewSever() *RedisServer {
 	return &RedisServer{
 		quitch: make(chan struct{}),
 		msgch:  make(chan []byte),
-		Config: config.Configs,
 	}
 }
 
 func (rs *RedisServer) Start() error {
-	ln, err := net.Listen("tcp", rs.Config.ListenAddr)
+	ln, err := net.Listen("tcp", config.Configs.ListenAddr)
 	if err != nil {
 		return err
 	}
@@ -34,7 +32,7 @@ func (rs *RedisServer) Start() error {
 	defer ln.Close()
 	commands.Set = make(map[string]string)
 
-	fmt.Println("redis server starting on port", rs.Config.ListenAddr)
+	fmt.Println("redis server starting on port", config.Configs.ListenAddr)
 	rs.ln = ln
 	go rs.acceptConnectionsLoop()
 
@@ -85,11 +83,11 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	command := splitMsg[2]
 
 	if command == "ping" {
-		return "+PONG"
+		return commands.PingCommand()
 	}
 	if command == "echo" {
 		if len(splitMsg) >= 4 {
-			return "+" + splitMsg[4]
+			return commands.EchoCommand(splitMsg)
 		}
 	}
 	if command == "set" {
