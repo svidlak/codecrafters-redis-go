@@ -1,11 +1,9 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net"
-	"strconv"
 	"strings"
 
 	config "github.com/codecrafters-io/redis-starter-go"
