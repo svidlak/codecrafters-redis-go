@@ -7,62 +7,36 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"time"
+
+	config "github.com/codecrafters-io/redis-starter-go"
+	commands "github.com/codecrafters-io/redis-starter-go/internal"
 )
 
 type RedisServer struct {
-	listenAddr  string
-	ln          net.Listener
-	quitch      chan struct{}
-	msgch       chan []byte
-	replicaHost string
-	replicaPort string
-	clusterType string
-	offset      int
-	ID          string
+	ln     net.Listener
+	quitch chan struct{}
+	msgch  chan []byte
+	config.Config
 }
 
-var Set map[string]string
-
 func NewSever() *RedisServer {
-	port := flag.String("port", "6379", "redis port")
-	replicaHost := flag.String("replicaof", "", "redis master cluster")
-	replicaPort := "0"
-
-	flag.Parse()
-	args := flag.Args()
-
-	clusterType := "master"
-
-	if len(*replicaHost) > 0 {
-		clusterType = "slave"
-	}
-	if len(args) > 0 {
-		replicaPort = args[0]
-	}
-
 	return &RedisServer{
-		clusterType: clusterType,
-		listenAddr:  ":" + *port,
-		quitch:      make(chan struct{}),
-		msgch:       make(chan []byte),
-		replicaHost: *replicaHost,
-		replicaPort: replicaPort,
-		ID:          "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb",
-		offset:      0,
+		quitch: make(chan struct{}),
+		msgch:  make(chan []byte),
+		Config: config.Configs,
 	}
 }
 
 func (rs *RedisServer) Start() error {
-	ln, err := net.Listen("tcp", rs.listenAddr)
+	ln, err := net.Listen("tcp", rs.Config.ListenAddr)
 	if err != nil {
 		return err
 	}
 
 	defer ln.Close()
-	Set = make(map[string]string)
+	commands.Set = make(map[string]string)
 
-	fmt.Println("redis server starting on port", rs.listenAddr)
+	fmt.Println("redis server starting on port", rs.Config.ListenAddr)
 	rs.ln = ln
 	go rs.acceptConnectionsLoop()
 
@@ -122,46 +96,17 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	}
 	if command == "set" {
 		if len(splitMsg) >= 6 {
-			key := splitMsg[4]
-			val := splitMsg[6]
-
-			if len(splitMsg) >= 10 {
-				expirationTime, err := strconv.Atoi(splitMsg[10])
-				if err != nil {
-					return "-ERROR"
-				}
-				go time.AfterFunc(time.Duration(expirationTime)*time.Millisecond, func() {
-					delete(Set, key)
-				})
-			}
-			Set[key] = val
-			return "+OK"
+			return commands.SetCommand(splitMsg)
 		}
 	}
 	if command == "get" {
 		if len(splitMsg) >= 4 {
-			key := splitMsg[4]
-			val, ok := Set[key]
-			if ok {
-				return "+" + val
-			}
-			return "$-1"
+			return commands.GetCommand(splitMsg)
 		}
 	}
 	if command == "info" {
 		if len(splitMsg) >= 4 {
-			infoParam := splitMsg[4]
-			if infoParam == "replication" {
-				info := []string{
-					"role:" + rs.clusterType,
-					"master_replid:" + rs.ID,
-					"master_repl_offset:" + strconv.Itoa(rs.offset),
-				}
-
-				joined := strings.Join(info, "\n")
-
-				return "$" + strconv.Itoa(len(joined)) + "\r\n" + joined
-			}
+			return commands.InfoCommand(splitMsg)
 		}
 	}
 
@@ -170,6 +115,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 }
 
 func main() {
+	config.SetConfig()
 	redisSever := NewSever()
 	log.Fatal(redisSever.Start())
 }
