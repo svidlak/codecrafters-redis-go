@@ -30,7 +30,6 @@ func (rs *RedisServer) Start() error {
 	}
 
 	defer ln.Close()
-	commands.Set = make(map[string]string)
 
 	fmt.Println("redis server starting on port", config.Configs.ListenAddr)
 	rs.ln = ln
@@ -111,6 +110,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 }
 
 func main() {
+	commands.InitCommands()
 	config.SetConfig()
 	redisSever := NewSever()
 	log.Fatal(redisSever.Start())
