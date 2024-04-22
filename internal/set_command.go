@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var Set map[string]string
-
 func SetCommand(splitMsg []string) string {
 	key := splitMsg[4]
 	val := splitMsg[6]
