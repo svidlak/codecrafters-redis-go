@@ -67,12 +67,12 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 
 		msg := buf[:n]
 		response := rs.parseMessage(msg)
-
-		if !strings.Contains(string(msg), "sync_db") {
-			response = response + "\r\n"
-		}
+		response = response + "\r\n"
 
 		conn.Write([]byte(response))
+		if strings.Contains(string(msg), "psync") {
+			conn.Write([]byte(commands.SyncRdb()))
+		}
 	}
 }
 
@@ -85,9 +85,6 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	command := splitMsg[2]
 	fmt.Println(command)
 
-	if command == "sync_db" {
-		return commands.SyncRdb()
-	}
 	if command == "psync" {
 		return commands.PsyncCommand(splitMsg)
 	}
@@ -157,14 +154,6 @@ func (rs *RedisServer) sendHandshake() error {
 		return err
 	}
 	_, err = conn.Write([]byte("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"))
-	if err != nil {
-		return err
-	}
-	_, err = conn.Read(bytes)
-	if err != nil {
-		return err
-	}
-	_, err = conn.Write([]byte("*1\r\n$7\r\nsync_db\r\n"))
 	if err != nil {
 		return err
 	}
