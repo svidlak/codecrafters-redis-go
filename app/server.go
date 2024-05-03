@@ -82,6 +82,9 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	command := splitMsg[2]
 	fmt.Println(command)
 
+	if command == "psync" {
+		return commands.PsyncCommand(splitMsg)
+	}
 	if command == "replconf" {
 		return commands.ReplconfCommand(splitMsg)
 	}
@@ -113,48 +116,49 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 
 }
 
-func (rs *RedisServer) sendHandshake() {
-	// PING
+func (rs *RedisServer) sendHandshake() error {
 	bytes := make([]byte, 1024)
 
 	conn, err := net.Dial("tcp", "0.0.0.0:6379")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	_, err = conn.Write([]byte("*1\r\n$4\r\nping\r\n"))
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	_, err = conn.Read(bytes)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	_, err = conn.Write([]byte("*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n"))
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	_, err = conn.Read(bytes)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	_, err = conn.Write([]byte("*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"))
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	_, err = conn.Read(bytes)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+	_, err = conn.Write([]byte("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n"))
+	if err != nil {
+		return err
+	}
+	_, err = conn.Read(bytes)
+	if err != nil {
+		return err
+	}
+	return nil
 
 }
 
@@ -164,7 +168,10 @@ func main() {
 	redisSever := NewSever()
 
 	if config.Configs.ClusterType == "slave" {
-		redisSever.sendHandshake()
+		err := redisSever.sendHandshake()
+		if err != nil {
+			panic("error")
+		}
 	}
 
 	log.Fatal(redisSever.Start())
