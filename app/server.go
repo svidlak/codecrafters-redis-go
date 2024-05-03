@@ -163,10 +163,6 @@ func (rs *RedisServer) sendHandshake() error {
 	if err != nil {
 		return err
 	}
-	_, err = conn.Read(bytes)
-	if err != nil {
-		return err
-	}
 
 	return nil
 
