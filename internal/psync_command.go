@@ -1,7 +1,12 @@
 package commands
 
-import config "github.com/codecrafters-io/redis-starter-go"
+import (
+	"fmt"
+
+	config "github.com/codecrafters-io/redis-starter-go"
+)
 
 func PsyncCommand(splitMsg []string) string {
-	return "+FULLRESYNC" + config.Configs.ID + "0"
+	fmt.Print(config.Configs.ID)
+	return "+FULLRESYNC " + config.Configs.ID + " 0"
 }
