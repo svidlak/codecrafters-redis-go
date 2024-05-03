@@ -72,7 +72,7 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 		conn.Write([]byte(response))
 
 		if strings.Contains(string(msg), "psync") {
-			//conn.Write([]byte(commands.SyncRdb()))
+			conn.Write([]byte(commands.SyncRdb()))
 		}
 	}
 }
@@ -162,6 +162,11 @@ func (rs *RedisServer) sendHandshake() error {
 	if err != nil {
 		return err
 	}
+	_, err = conn.Read(bytes)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
