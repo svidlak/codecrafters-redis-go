@@ -86,7 +86,7 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	fmt.Println(command)
 
 	if command == "sync_db" {
-		return string(commands.SyncRdb())
+		return commands.SyncRdb()
 	}
 	if command == "psync" {
 		return commands.PsyncCommand(splitMsg)
