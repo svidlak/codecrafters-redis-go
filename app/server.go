@@ -77,10 +77,14 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 	msg := strings.ToLower(strings.TrimSpace(string(message)))
 	splitMsg := strings.Split(msg, "\r\n")
 
-	fmt.Printf("%#v\n", splitMsg)
+	//fmt.Printf("%#v\n", splitMsg)
 
 	command := splitMsg[2]
+	fmt.Println(command)
 
+	if command == "replconf" {
+		return commands.ReplconfCommand(splitMsg)
+	}
 	if command == "ping" {
 		return commands.PingCommand()
 	}
@@ -111,12 +115,47 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 
 func (rs *RedisServer) sendHandshake() {
 	// PING
+	bytes := make([]byte, 1024)
+
 	conn, err := net.Dial("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	conn.Write([]byte("*1\r\n$4\r\nping\r\n"))
+
+	_, err = conn.Write([]byte("*1\r\n$4\r\nping\r\n"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	_, err = conn.Read(bytes)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	_, err = conn.Write([]byte("*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	_, err = conn.Read(bytes)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	_, err = conn.Write([]byte("*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	_, err = conn.Read(bytes)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 }
 
 func main() {
