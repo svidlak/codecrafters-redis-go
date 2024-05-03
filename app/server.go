@@ -71,7 +71,8 @@ func (rs *RedisServer) readConnectionMessages(conn net.Conn) {
 
 		conn.Write([]byte(response))
 
-		if strings.Contains(string(msg), "psync") {
+		if strings.Contains(string(msg), "PSYNC") && !strings.Contains(string(msg), "psync2") {
+			fmt.Println(string(msg))
 			conn.Write([]byte(commands.SyncRdb()))
 		}
 	}
