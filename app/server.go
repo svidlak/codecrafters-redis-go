@@ -109,9 +109,24 @@ func (rs *RedisServer) parseMessage(message []byte) string {
 
 }
 
+func (rs *RedisServer) sendHandshake() {
+	// PING
+	conn, err := net.Dial("tcp", "0.0.0.0:6379")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	conn.Write([]byte("*1\r\n$4\r\nping\r\n"))
+}
+
 func main() {
 	commands.InitCommands()
 	config.SetConfig()
 	redisSever := NewSever()
+
+	if config.Configs.ClusterType == "slave" {
+		redisSever.sendHandshake()
+	}
+
 	log.Fatal(redisSever.Start())
 }
