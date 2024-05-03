@@ -164,7 +164,11 @@ func (rs *RedisServer) sendHandshake() error {
 	if err != nil {
 		return err
 	}
-	_, err = conn.Write([]byte("*1\r\n$4\r\nsync_db\r\n"))
+	_, err = conn.Write([]byte("*1\r\n$7\r\nsync_db\r\n"))
+	if err != nil {
+		return err
+	}
+	_, err = conn.Read(bytes)
 	if err != nil {
 		return err
 	}
